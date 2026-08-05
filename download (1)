@@ -1,0 +1,72 @@
+import React from 'react';
+import { useApp } from '../../context/AppContext';
+import { RotateCcw, CheckCircle2, AlertCircle } from 'lucide-react';
+
+export const SpacedRepetitionView: React.FC = () => {
+  const { state, setState, showToast } = useApp();
+
+  // Find all topics with status 2 (Tekrar Bekleyen) or mistakes requiring review
+  const reviewTopics = Object.entries(state.topics)
+    .filter(([, status]) => status === 2)
+    .map(([key]) => {
+      const [course, topic] = key.split('|');
+      return { course, topic, reason: 'Periyodik Konu Tekrarı' };
+    });
+
+  const handleCompleteReview = (course: string, topic: string) => {
+    const key = `${course}|${topic}`;
+    setState((prev) => ({
+      ...prev,
+      topics: {
+        ...prev.topics,
+        [key]: 3 // Set to completed
+      }
+    }));
+    showToast(`${course} - ${topic} tekrar tamamlandı ve yeşil tike çekildi!`);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="p-6 rounded-2xl bg-slate-800/80 dark:bg-slate-900/80 border border-slate-700/80 shadow-md space-y-2">
+        <div className="flex items-center gap-2 font-bold text-lg text-slate-100">
+          <RotateCcw className="w-5 h-5 text-amber-400" />
+          <h3>Akıllı Tekrar ve Aralık Tekrar Sistemi</h3>
+        </div>
+        <p className="text-xs text-slate-400">
+          Aralıklı tekrar algoritması ile unutmaman gereken ve tekrar işaretlediğin tüm konular burada listelenir.
+        </p>
+      </div>
+
+      {reviewTopics.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {reviewTopics.map((item, idx) => (
+            <div
+              key={idx}
+              className="p-5 rounded-2xl bg-slate-800/80 dark:bg-slate-900/80 border border-slate-700/80 shadow-md flex items-center justify-between gap-4"
+            >
+              <div>
+                <div className="font-extrabold text-slate-100 text-base">{item.course}</div>
+                <div className="text-sm font-semibold text-amber-400">{item.topic}</div>
+                <div className="text-xs text-slate-400 mt-1">{item.reason}</div>
+              </div>
+
+              <button
+                onClick={() => handleCompleteReview(item.course, item.topic)}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 shrink-0"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Tekrar Edildi</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="p-8 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-center text-slate-400 space-y-2">
+          <AlertCircle className="w-8 h-8 mx-auto text-slate-500" />
+          <p className="font-semibold text-slate-300">Harika! Tekrar bekleyen konu bulunmuyor.</p>
+          <p className="text-xs">Ders & Konu Takibi sayfasından konulara "Tekrar" statüsü vererek buraya ekleyebilirsiniz.</p>
+        </div>
+      )}
+    </div>
+  );
+};

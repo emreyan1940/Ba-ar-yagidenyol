@@ -1,0 +1,104 @@
+import React from 'react';
+import { AppProvider, useApp } from './context/AppContext';
+import { HeaderNavbar } from './components/HeaderNavbar';
+import { PageContainer } from './components/PageContainer';
+
+import { DashboardView } from './components/views/DashboardView';
+import { TopicsView } from './components/views/TopicsView';
+import { BooksView } from './components/views/BooksView';
+import { CampTrackerView } from './components/views/CampTrackerView';
+import { CampWeeklyView } from './components/views/CampWeeklyView';
+import { CampMonthlyView } from './components/views/CampMonthlyView';
+import { LessonNotesView } from './components/views/LessonNotesView';
+import { WeakCenterView } from './components/views/WeakCenterView';
+import { PomodoroView } from './components/views/PomodoroView';
+import { MusicView } from './components/views/MusicView';
+import { ExamAnalysisView } from './components/views/ExamAnalysisView';
+import { ExamChartsView } from './components/views/ExamChartsView';
+import { MistakeNotebookView } from './components/views/MistakeNotebookView';
+import { SpeedAnalysisView } from './components/views/SpeedAnalysisView';
+import { PastQuestionsView } from './components/views/PastQuestionsView';
+import { CampProgressCenterView } from './components/views/CampProgressCenterView';
+import { SpacedRepetitionView } from './components/views/SpacedRepetitionView';
+import { MediaTrackerView } from './components/views/MediaTrackerView';
+import { HealthTrackerView } from './components/views/HealthTrackerView';
+import { SettingsView } from './components/views/SettingsView';
+
+const MainContent: React.FC = () => {
+  const { activeTab } = useApp();
+
+  const renderActiveView = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'topics':
+        return <TopicsView />;
+      case 'books':
+        return <BooksView />;
+      case 'camps':
+        return <CampTrackerView />;
+      case 'campWeekly':
+        return <CampWeeklyView />;
+      case 'campMonthly':
+        return <CampMonthlyView />;
+      case 'lessonNotes':
+        return <LessonNotesView />;
+      case 'weakCenter':
+        return <WeakCenterView />;
+      case 'pomo':
+        return <PomodoroView />;
+      case 'music':
+        return <MusicView />;
+      case 'exams':
+        return <ExamAnalysisView />;
+      case 'charts':
+        return <ExamChartsView />;
+      case 'mistakes':
+        return <MistakeNotebookView />;
+      case 'pastQuestions':
+        return <PastQuestionsView />;
+      case 'speedAnalysis':
+        return <SpeedAnalysisView />;
+      case 'campProgressCenter':
+        return <CampProgressCenterView />;
+      case 'repeats':
+        return <SpacedRepetitionView />;
+      case 'media':
+        return <MediaTrackerView />;
+      case 'health':
+        return <HealthTrackerView />;
+      case 'settings':
+        return <SettingsView />;
+      default:
+        return <DashboardView />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-[#e0e0e0] transition-colors font-sans antialiased selection:bg-indigo-500 selection:text-white">
+      <HeaderNavbar />
+      <main id="main-content">
+        <PageContainer>{renderActiveView()}</PageContainer>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-200 dark:border-white/10 bg-white dark:bg-[#080808] py-8 text-center text-xs text-slate-500 dark:text-[#888888] font-sans tracking-widest uppercase">
+        <p className="flex items-center justify-center gap-2">
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Başarıya Giden Yol</span>
+          <span className="text-indigo-600 dark:text-[#c0a080]">•</span>
+          <span className="font-serif italic font-bold text-slate-900 dark:text-white/90">YKS 2027</span>
+          <span className="text-indigo-600 dark:text-[#c0a080]">•</span>
+          <span>Zirveye Giden Yolda Yanındayız</span>
+        </p>
+      </footer>
+    </div>
+  );
+};
+
+export default function App() {
+  return (
+    <AppProvider>
+      <MainContent />
+    </AppProvider>
+  );
+}
