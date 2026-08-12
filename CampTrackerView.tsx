@@ -1,150 +1,48 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { AppState, NavigationTab, ThemeMode, ThemeShopId } from '../types';
-import { INITIAL_APP_STATE } from '../data/initialData';
+import React, { useMemo } from 'react';
+import { useApp } from './AppContext';
 
-interface Toast {
-  id: string;
-  message: string;
-  type?: 'success' | 'info' | 'warning';
-}
-
-interface AppContextType {
-  state: AppState;
-  setState: React.Dispatch<React.SetStateAction<AppState>>;
-  activeTab: NavigationTab;
-  setActiveTab: (tab: NavigationTab) => void;
-  toasts: Toast[];
-  showToast: (message: string, type?: 'success' | 'info' | 'warning') => void;
-  toggleTheme: () => void;
-  setThemeShop: (shopId: ThemeShopId) => void;
-  saveState: (newState?: AppState) => void;
-  resetData: () => void;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-const LOCAL_STORAGE_KEY = 'bgy_app_state_v32';
-
-export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return { ...INITIAL_APP_STATE, ...parsed };
-      }
-    } catch (e) {
-      console.error('Failed to parse state from localStorage', e);
-    }
-    return INITIAL_APP_STATE;
-  });
-
-  const [activeTab, setActiveTabState] = useState<NavigationTab>('dashboard');
-  const [toasts, setToasts] = useState<Toast[]>([]);
-
-  // Apply dark/light class to html element
-  useEffect(() => {
-    if (state.theme === 'light') {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-      document.documentElement.classList.add('dark');
-    }
-  }, [state.theme]);
-
-  // Save to localStorage on state changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.error('Error writing to localStorage', e);
-    }
-  }, [state]);
-
-  const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'success') => {
-    const id = Date.now().toString();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2800);
-  };
-
-  const setActiveTab = (tab: NavigationTab) => {
-    setActiveTabState(tab);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const toggleTheme = () => {
-    const newTheme: ThemeMode = state.theme === 'dark' ? 'light' : 'dark';
-    setState((prev) => ({ ...prev, theme: newTheme }));
-    showToast(`Tema ${newTheme === 'dark' ? 'Karanlık Mod' : 'Aydınlık Mod'} yapıldı.`, 'info');
-  };
-
-  const setThemeShop = (shopId: ThemeShopId) => {
-    setState((prev) => ({ ...prev, themeShop: shopId }));
-    showToast(`Tema mağazası stili uygulandı: ${shopId}`, 'success');
-  };
-
-  const saveState = (newState?: AppState) => {
-    if (newState) {
-      setState(newState);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newState));
-    } else {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-    }
-    showToast('Tüm verileriniz kaydedildi', 'success');
-  };
-
-  const resetData = () => {
-    if (window.confirm('Tüm verilerinizi ve kayıtlarınızı sıfırlamak istediğinize emin misiniz?')) {
-      setState(INITIAL_APP_STATE);
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-      showToast('Sistem varsayılan verilere sıfırlandı.', 'warning');
-    }
-  };
+export const CampTrackerView: React.FC = () => {
+  const { camps, toggleCampDay, addCamp, deleteCamp } = useApp();
+  const active = camps?.[0];
+  const days = active?.days ?? active?.items ?? [];
+  const completed = days.filter((d: any) => d.completed || d.done).length;
+  const percent = days.length ? Math.round((completed / days.length) * 100) : 0;
 
   return (
-    <AppContext.Provider
-      value={{
-        state,
-        setState,
-        activeTab,
-        setActiveTab,
-        toasts,
-        showToast,
-        toggleTheme,
-        setThemeShop,
-        saveState,
-        resetData
-      }}
-    >
-      {children}
-      {/* Toast Notification Container */}
-      <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`pointer-events-auto px-4 py-3 rounded-xl shadow-xl text-sm font-semibold flex items-center gap-2 transition-all transform animate-slide-up ${
-              toast.type === 'warning'
-                ? 'bg-rose-600 text-white'
-                : toast.type === 'info'
-                ? 'bg-blue-600 text-white'
-                : 'bg-emerald-600 text-white'
-            }`}
-          >
-            <span>{toast.message}</span>
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#111]">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">📚 Kamp Takibi</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Kampını gün gün takip et, tamamladıklarını işaretle.</p>
           </div>
-        ))}
+          <button onClick={() => addCamp?.()} className="rounded-xl bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">+ Kamp Ekle</button>
+        </div>
+        {active && (
+          <div className="mt-6">
+            <div className="mb-2 flex justify-between text-sm"><span>{active.name}</span><strong>%{percent}</strong></div>
+            <div className="h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10"><div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${percent}%` }} /></div>
+            <div className="mt-2 text-xs text-slate-500">{completed} / {days.length} gün tamamlandı</div>
+          </div>
+        )}
       </div>
-    </AppContext.Provider>
-  );
-};
 
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
-  return context;
+      {!active ? (
+        <div className="rounded-2xl border border-dashed border-slate-300 p-10 text-center dark:border-white/20">
+          <div className="text-4xl">📚</div><h2 className="mt-3 text-lg font-semibold">Henüz kamp yok</h2><p className="mt-1 text-sm text-slate-500">Kamp Ekle butonuyla ilk kampını oluştur.</p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {days.map((day: any, index: number) => {
+            const done = Boolean(day.completed ?? day.done);
+            return <button key={day.id ?? index} onClick={() => toggleCampDay?.(active.id, day.id ?? index)} className={`flex items-center gap-4 rounded-xl border p-4 text-left transition ${done ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-900/50 dark:bg-emerald-950/20' : 'border-slate-200 bg-white dark:border-white/10 dark:bg-[#111]'}`}>
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 ${done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-white/20'}`}>{done ? '✓' : index + 1}</span>
+              <span className="flex-1"><strong>{day.title ?? day.topic ?? day.name ?? `Gün ${index + 1}`}</strong>{day.duration ? <small className="ml-2 text-slate-500">{day.duration} dk</small> : null}</span>
+            </button>;
+          })}
+          <button onClick={() => deleteCamp?.(active.id)} className="mt-3 rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:hover:bg-red-950/20">Bu Kampı Sil</button>
+        </div>
+      )}
+    </div>
+  );
 };
